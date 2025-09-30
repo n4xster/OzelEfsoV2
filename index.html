@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Discord Karakter Kartı Üretici v3</title>
+    <title>Discord Karakter Kartı Üretici v4</title>
     <style>
         /* Discord Dark Theme Stilleri */
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #36393f; color: #ffffff; padding: 20px; }
@@ -67,15 +67,13 @@
         
         // 5'in katı olarak rastgele sayı üreten fonksiyon
         const getRandomMultipleOfFive = (min, max) => {
-            // min ve max aralığında rastgele bir sayı al
             let num = Math.floor(Math.random() * (max - min + 1)) + min;
-            // Sayıyı 5'in katına yuvarla (en yakın 5'in katı)
-            return Math.ceil(num / 5) * 5; 
+            return Math.ceil(num / 5) * 5;  // Sayıyı 5'in katına yuvarla
         };
         const getRandomTier = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
+        // --- VERİ LİSTELERİ ---
 
-        // 1. İsim Listeleri (Temalarla uyumlu)
         const latinceIsimler = [
             "Aeternus", "Bellator", "Vindex", "Ignis", "Umbra", "Caelus", "Lux", "Veritas", "Tempus", "Ferrum",
             "Mantis", "Serpens", "Astralix", "Nexus", "Dominus", "Silentium", "Kyron", "Oblivion", "Spectre", "Zenith",
@@ -87,7 +85,6 @@
             "Magus", "Rogue", "Paladin", "Slayer", "Guardian", "Wasteland", "Cypher", "Breaker", "Abyss", "Catalyst"
         ];
         
-        // 2. Güç Listeleri (Genişletilmiş ve Tematik)
         const gucTemalari = {
             elemental: [
                 "Plazma Manipülasyonu: Saf enerji patlamaları üretir ve enerji alanlarını saptırır.",
@@ -139,6 +136,8 @@
             ]
         };
 
+        // --- ANA FONKSİYON ---
+
         function generateCharacter() {
             const outputDiv = document.getElementById('characterOutput');
             const customName = document.getElementById('customName').value.trim();
@@ -160,17 +159,15 @@
             const yenilenme = getRandomMultipleOfFive(yenilenmeMax * 0.7, yenilenmeMax);
             
             // 4. Güç Belirleme (Tier'a göre güç sayısı ve özel tema)
-            const gucSayisi = Math.ceil(tier / 2) + 2; 
+            const gucSayisi = Math.ceil(tier / 2) + 2;  // Tier 1 için 3, Tier 10 için 7 güç
             let secilenGucler = new Set();
             
-            // Özel tema seçildiyse sadece o temayı kullan, yoksa tüm temaları kullan
             const temaHavuzu = customTheme === 'random' ? Object.keys(gucTemalari) : [customTheme];
 
             for (let i = 0; i < gucSayisi; i++) {
                 const temaAdi = getRandomItem(temaHavuzu);
                 let guc = getRandomItem(gucTemalari[temaAdi]);
                 
-                // Aynı gücü tekrar seçmemek için ve tema dışı güç seçmemek için deneme
                 let denemeSayaci = 0;
                 while(secilenGucler.has(guc) && denemeSayaci < 10) {
                     const yeniTemaAdi = getRandomItem(temaHavuzu); 
@@ -180,19 +177,20 @@
                 secilenGucler.add(guc);
             }
             
-            // HTML ve Discord metnine çevirme
+            // HTML metnine çevirme
             const gucListesiHTML = Array.from(secilenGucler).map(g => {
                 const parts = g.split(':');
                 const name = parts[0].trim();
                 const desc = parts.length > 1 ? parts[1].trim() : "Açıklaması yok.";
-                return <li><strong>➤ ${name}</strong>: ${desc}</li>;
+                return `<li><strong>➤ ${name}</strong>: ${desc}</li>`;
             }).join('');
             
+            // Discord metnine çevirme (buradaki kaçış işaretleri düzeltildi)
             const gucListesiDiscord = Array.from(secilenGucler).map(g => {
                 const parts = g.split(':');
-                const name = parts[0].trim();
-                const desc = parts.length > 1 ? parts[1].trim() : "Açıklaması yok.";
-                return **➤ ${name}**\n* ${desc};
+                const name = parts[0].trim().replace(/`/g, '\\`'); // Discord uyumluluğu için
+                const desc = parts.length > 1 ? parts[1].trim().replace(/`/g, '\\`') : "Açıklaması yok.";
+                return `**➤ ${name}**\n* ${desc}`;
             }).join('\n');
 
 
@@ -203,13 +201,13 @@
             
             if (tier === 10) {
                 cardClass = 'card-tier-10';
-                ekBilgi = "<p style='color:#ff9900; font-weight:bold;'>*ÖZEL:* Mutlak Varlık. Fizik ve Metafizik Yasaların Üstündedir. Ölümsüzdür.</p>";
-                ekBilgiDiscord = "*ÖZEL:* Mutlak Varlık. Fizik ve Metafizik Yasaların Üstündedir. Ölümsüzdür.\n";
+                ekBilgi = "<p style='color:#ff9900; font-weight:bold;'>**ÖZEL:** Mutlak Varlık. Fizik ve Metafizik Yasaların Üstündedir. Ölümsüzdür.</p>";
+                ekBilgiDiscord = "**ÖZEL:** Mutlak Varlık. Fizik ve Metafizik Yasaların Üstündedir. Ölümsüzdür.\n";
             } else if (tier >= 7) {
                 cardClass = 'card-tier-8';
                 if (Math.random() < 0.3) {
-                    ekBilgi = "<p style='color:#cc00ff; font-weight:bold;'>*ÖZEL:* Varoluş Manipülasyonu. Belli bir alandaki maddeselliği değiştirebilir.</p>";
-                    ekBilgiDiscord = "*ÖZEL:* Varoluş Manipülasyonu. Belli bir alandaki maddeselliği değiştirebilir.\n";
+                    ekBilgi = "<p style='color:#cc00ff; font-weight:bold;'>**ÖZEL:** Varoluş Manipülasyonu. Belli bir alandaki maddeselliği değiştirebilir.</p>";
+                    ekBilgiDiscord = "**ÖZEL:** Varoluş Manipülasyonu. Belli bir alandaki maddeselliği değiştirebilir.\n";
                 }
             } else if (tier >= 4) {
                 cardClass = 'card-tier-5';
@@ -220,21 +218,22 @@
             }
 
 
-            // Discord Kopyalama Metni
+            // Discord Kopyalama Metni (Tüm tırnak işaretleri düzeltildi)
             const discordText = `
-<:mystery:1358389140273496084>〕 *${isim}*
+<:mystery:1358389140273496084>〕 **${isim}**
 
 -# ➤ Can ${can} <:MC_Heart_Full:1373780419450900511>
 -# ➤ Kuvvet ${kuvvet} <:kuvvet:1400844968658075810>
 -# ➤ Yenilenme ${yenilenme}<:MC_Heart_Full:1373780419450900511>
-Tier: ${tier}
+*Tier: ${tier}*
 ---
-*Güçler Ve Bilgiler*
+**Güçler Ve Bilgiler**
 ${ekBilgiDiscord}
 ${gucListesiDiscord}
 `;
 
             // HTML Kartı Oluşturma
+            // copyToClipboard içindeki `discordText.trim()` doğru şekilde tırnak içine alındı.
             const characterCard = `
                 <div class="card ${cardClass}">
                     <div class="header">
@@ -264,7 +263,7 @@ ${gucListesiDiscord}
                     <ul class="power-list">
                         ${gucListesiHTML}
                     </ul>
-                    <button class="copy-button" onclick="copyToClipboard(this, \${discordText.trim()}\)">Discord Kopyala</button>
+                    <button class="copy-button" onclick="copyToClipboard(this, \`${discordText.trim().replace(/`/g, '\\`')}\`)">Discord Kopyala</button>
                 </div>
             `;
             
